@@ -10,7 +10,7 @@ import (
 // Serialization 序列化接口
 type Serialization interface {
 	Serialize(ctx context.Context, src interface{}) error
-	SetDoor(door *Sharingan)
+	SetSharingan(s *Sharingan)
 }
 
 // Sharingan  序列化
@@ -79,7 +79,7 @@ func (d *Sharingan) syncConvert(ctx context.Context, srcValue reflect.Value, des
 		switch y.Type().Kind() {
 		case reflect.Ptr:
 			r := y.Interface().(Serialization)
-			r.SetDoor(d)
+			r.SetSharingan(d)
 			d.Converted(ctx, si, r)
 			ds.Set(reflect.ValueOf(r))
 		default:
@@ -105,7 +105,7 @@ func (d *Sharingan) asyncConvert(ctx context.Context, srcValue reflect.Value, de
 		switch y.Type().Kind() {
 		case reflect.Ptr:
 			r := y.Interface().(Serialization)
-			r.SetDoor(d)
+			r.SetSharingan(d)
 			d.wg.Add(1)
 			go d.Converted(ctx, si, r)
 			ds.Set(reflect.ValueOf(r))
