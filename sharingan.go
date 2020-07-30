@@ -108,6 +108,7 @@ func (d *Sharingan) syncConvert(ctx context.Context, srcValue reflect.Value, des
 // asyncConvert 异步转化
 func (d *Sharingan) asyncConvert(ctx context.Context, srcValue reflect.Value, destValue reflect.Value) error {
 	pool, _ := ants.NewPool(d.poolSize)
+	defer pool.Release()
 	dests := reflect.MakeSlice(destValue.Type(), srcValue.Len(), srcValue.Len())
 	for i := 0; i < srcValue.Len(); i++ {
 		var si interface{}

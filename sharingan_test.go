@@ -2,9 +2,10 @@ package sharingan
 
 import (
 	"context"
-	"testing"
-	"fmt"
 	"encoding/json"
+	"fmt"
+	"testing"
+	"time"
 )
 
 type Person struct {
@@ -19,7 +20,6 @@ type People struct {
 	*Sharingan
 }
 
-
 func (b *People) Serialize(ctx context.Context, src interface{}) error {
 	ori := src.(*Person)
 	b.ID = ori.ID
@@ -30,6 +30,7 @@ func (b *People) Serialize(ctx context.Context, src interface{}) error {
 	} else {
 		b.Sex = "gay"
 	}
+	time.Sleep(2 * time.Second)
 	return nil
 }
 
@@ -78,10 +79,10 @@ func TestSerializeManyAsync(t *testing.T) {
 	bz := make([]*People, 100)
 	err := sgan.ConvertedMany(context.TODO(), a, &bz, true)
 	if len(bz) != 2 {
-		t.Errorf("[TestSerializeMany] convert data error data:%v, result:%v",a, bz)
+		t.Errorf("[TestSerializeMany] convert data error data:%v, result:%v", a, bz)
 	}
 	if bz[1].ID != "b1" || bz[1].Name != "s1" || bz[1].Sex != "gay" {
-		t.Errorf("[TestSerializeMany] convert data error data:%v, result:%v",a[1], bz[1])
+		t.Errorf("[TestSerializeMany] convert data error data:%v, result:%v", a[1], bz[1])
 	}
 	if err != nil {
 		t.Errorf("[TestSerializeMany] convert error %v", err)
@@ -91,21 +92,21 @@ func TestSerializeManyAsync(t *testing.T) {
 func TestSerializeManySync(t *testing.T) {
 	s := &Person{ID: "b", Name: "s"}
 	s1 := &Person{ID: "b1", Name: "s1"}
+	s2 := &Person{ID: "b2", Name: "s2"}
 	sgan := NewSharingan()
 	z := map[string]interface{}{
 		"sex": "man",
 	}
 	sgan.SetPrepare(z)
 	a := make([]*Person, 0)
-	a = append(a, s)
-	a = append(a, s1)
+	a = append(a, s, s1, s2)
 	bz := make([]*People, 100)
-	err := sgan.ConvertedMany(context.TODO(), a, &bz, true)
-	if len(bz) != 2 {
-		t.Errorf("[TestSerializeMany] convert data error data:%v, result:%v",a, bz)
+	err := sgan.ConvertedMany(context.TODO(), a, &bz, false)
+	if len(bz) != 3 {
+		t.Errorf("[TestSerializeMany] convert data error data:%v, result:%v", a, bz)
 	}
 	if bz[0].ID != "b" || bz[0].Name != "s" || bz[0].Sex != "man" {
-		t.Errorf("[TestSerializeMany] convert data error data:%v, result:%v",a[0], bz[0])
+		t.Errorf("[TestSerializeMany] convert data error data:%v, result:%v", a[0], bz[0])
 	}
 	if err != nil {
 		t.Errorf("[TestSerializeMany] convert error %v", err)
