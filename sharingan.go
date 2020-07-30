@@ -35,6 +35,11 @@ func NewSharingan() *Sharingan {
 	}
 }
 
+// SetPoolSize set pool size
+func (d *Sharingan) SetPoolSize(size int) {
+	d.poolSize = size
+}
+
 // SetPrepare 设置序列化需要的预存数据
 func (d *Sharingan) SetPrepare(prepare map[string]interface{}) {
 	for k, v := range prepare {
