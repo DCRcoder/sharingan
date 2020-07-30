@@ -5,7 +5,11 @@ import (
 	"fmt"
 	"reflect"
 	"sync"
+
+	"github.com/panjf2000/ants"
 )
+
+var defaultPoolSize = 50
 
 // Serialization 序列化接口
 type Serialization interface {
@@ -18,11 +22,17 @@ type Sharingan struct {
 	prepareData sync.Map
 	wg          sync.WaitGroup
 	isAsync     bool
+	poolSize    int
 }
 
 // NewSharingan new instance
 func NewSharingan() *Sharingan {
-	return &Sharingan{}
+	return &Sharingan{
+		prepareData: sync.Map{},
+		wg:          sync.WaitGroup{},
+		isAsync:     false,
+		poolSize:    defaultPoolSize,
+	}
 }
 
 // SetPrepare 设置序列化需要的预存数据
@@ -92,6 +102,7 @@ func (d *Sharingan) syncConvert(ctx context.Context, srcValue reflect.Value, des
 
 // asyncConvert 异步转化
 func (d *Sharingan) asyncConvert(ctx context.Context, srcValue reflect.Value, destValue reflect.Value) error {
+	pool, _ := ants.NewPool(d.poolSize)
 	dests := reflect.MakeSlice(destValue.Type(), srcValue.Len(), srcValue.Len())
 	for i := 0; i < srcValue.Len(); i++ {
 		var si interface{}
@@ -107,7 +118,7 @@ func (d *Sharingan) asyncConvert(ctx context.Context, srcValue reflect.Value, de
 			r := y.Interface().(Serialization)
 			r.SetSharingan(d)
 			d.wg.Add(1)
-			go d.Converted(ctx, si, r)
+			pool.Submit(func() { _ = d.Converted(ctx, si, r) })
 			ds.Set(reflect.ValueOf(r))
 		default:
 			return fmt.Errorf("dest element must be pointer")
